@@ -8,12 +8,12 @@ clock = pygame.time.Clock()
 weight = 500
 height = 500
 screen = pygame.display.set_mode((weight, height))
-pygame.display.set_caption("Player3")
+pygame.display.set_caption("Player2")
 
 player1 = pygame.image.load("superheroes\\captainamerica.png")
 rect_player = player1.get_rect()
-rect_player.x = 250
-rect_player.y = 100
+rect_player.centerx = 250
+rect_player.centery = 100
 
 # movement units
 player_vel = 10
@@ -74,6 +74,7 @@ def update_position(player_vel):
     rect_player.x += direction.x * player_vel
     horizontal_collision()
     vertical_collision()
+    return rect_player
 
 class Tile(pygame.sprite.Sprite):
     def __init__(self, pos, size=35):
@@ -92,10 +93,12 @@ tiles.add(Tile((170, 170)))
 tiles.add(Tile((70, 100)))
 tiles.add(Tile((100, 300)))
 
+my_player_data = network.getPlayerData()
+
 while True:
     clock.tick(60)
 
-    all_players_rect = network.send([rect_player, "captainamerica.png"])
+    all_players_rect = network.send(my_player_data)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -113,7 +116,7 @@ while True:
     if userInput[pygame.K_UP] and rect_player.y > 0 and position[0]:
         jump()
 
-    update_position(player_vel)
+    my_player_data[0] = update_position(player_vel)
     screen.fill((30, 30, 30))
     # screen.blit(player1, rect_player)
     for tile in tiles:

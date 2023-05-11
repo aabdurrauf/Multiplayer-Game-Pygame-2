@@ -3,12 +3,12 @@ from network import Network
 
 network = Network()
 
-pygame.init()
+# pygame.init()
 clock = pygame.time.Clock()
 weight = 500
 height = 500
 screen = pygame.display.set_mode((weight, height))
-pygame.display.set_caption("Player")
+pygame.display.set_caption("Player2")
 
 player1 = pygame.image.load("superheroes\\captainamerica.png")
 rect_player = player1.get_rect()
@@ -74,6 +74,7 @@ def update_position(player_vel):
     rect_player.x += direction.x * player_vel
     horizontal_collision()
     vertical_collision()
+    return rect_player
 
 class Tile(pygame.sprite.Sprite):
     def __init__(self, pos, size=35):
@@ -92,9 +93,12 @@ tiles.add(Tile((170, 170)))
 tiles.add(Tile((70, 100)))
 tiles.add(Tile((100, 300)))
 
+my_player_data = network.getPlayerData()
+
 while True:
-    print("rect: ", rect_player)
-    network.send(rect_player)
+    clock.tick(60)
+
+    all_players_rect = network.send(my_player_data)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -112,11 +116,23 @@ while True:
     if userInput[pygame.K_UP] and rect_player.y > 0 and position[0]:
         jump()
 
-    update_position(player_vel)
-
+    my_player_data[0] = update_position(player_vel)
     screen.fill((30, 30, 30))
-    screen.blit(player1, rect_player)
+    # screen.blit(player1, rect_player)
     for tile in tiles:
         screen.blit(tile.image, tile.rect)
+
+    print(len(all_players_rect))
+    for i in range(len(all_players_rect)):
+        print(all_players_rect)
+        rect_other = all_players_rect[i][0]
+        image = all_players_rect[i][1]
+        print(image)
+        player_image = pygame.image.load("superheroes\\" + image)
+        rect = player_image.get_rect()
+        rect.x = rect_other.x
+        rect.y = rect_other.y
+
+        screen.blit(player_image, rect)
+
     pygame.display.flip()
-    clock.tick(60)
