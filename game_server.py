@@ -18,33 +18,23 @@ except socket.error as e:
 s.listen(4)
 print("Waiting for a connection")
 
+
 def update_players_data(players_data, player_data):
     players_data.append(player_data)
+    print("update_players_data: ", players_data)
     return players_data
 
-# def setup(layout, character_name):
-#     tiles = pygame.sprite.Group()
-#     player = pygame.sprite.GroupSingle()
-#
-#     for row_index, row in enumerate(layout):
-#         for col_index, cell in enumerate(row):
-#             x = col_index * 40
-#             y = row_index * 40
-#
-#             if cell == 'X':
-#                 tile = Tile((x, y), 40)
-#                 tiles.add(tile)
-#             if cell == 'P':
-#                 player_sprite = PlayerData((x, y), character_name)
-#                 player.add(player_sprite)
 
 def threaded_client(conn, players_data, player_no):
-    conn.send(pickle.dumps(players_data[player_no]))
+    conn.send(pickle.dumps(players_data[player_no]))  # actually we don't need this,
+    # we can just draw all the
+    # players on each side
 
     reply = ''
     while True:
         try:
             data = pickle.loads(conn.recv(2048))
+            print("data in try:", data)
             players_data[player_no] = data
             if not data:
                 conn.send(str.encode("Disconnected"))
@@ -52,6 +42,7 @@ def threaded_client(conn, players_data, player_no):
 
             conn.sendall(pickle.dumps(players_data))
         except:
+            print("data in except:", data)
             print("Failed to send")
             break
 
@@ -67,8 +58,8 @@ player_start_y = 150
 while True:
     conn, addr = s.accept()
     print("Connected to: ", addr)
-    players_data = update_players_data(players_data,
-                                       PlayerData(50 + 60 * cp, player_start_y, "superheroes\\" + character_list[cp]))
+    players_data = update_players_data(players_data, [None, character_list[cp]])
+    # print(players_data)
 
     start_new_thread(threaded_client, (conn, players_data, cp))
     cp += 1
