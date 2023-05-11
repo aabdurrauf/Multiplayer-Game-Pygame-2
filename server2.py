@@ -1,7 +1,7 @@
 import socket
 from _thread import *
 import pickle
-
+from tile2 import *
 import pygame
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # socket.SOCK_STREAM
@@ -23,12 +23,42 @@ print("Waiting for a connection")
 
 def update_data_to_be_sent(data_to_be_sent, player_data):
     data_to_be_sent.append(player_data)
-    print("update_data_to_be_sent: ", data_to_be_sent)
+    # print("update_data_to_be_sent: ", data_to_be_sent)
     return data_to_be_sent
+
+# make moving tiles
+width = 400
+height = 650
+cp = 1
+tile_maker = TileMaker()
+tiles_rect = tile_maker.getTiles(width, height)
+
+data_to_be_sent = []
+data_to_be_sent = update_data_to_be_sent(data_to_be_sent, tiles_rect)
+
+character_list = ["ironman.png", "captainamerica.png", "hulk.png", "thor.png"]
+
+# rectangle list for players
+rect_list = []
+for i in range(4):
+    rect = pygame.Rect( 50+60*i, 300, 51, 51)
+    rect_list.append(rect)
+speed = [1, -2, 3, -1]
+def update_moving_tiles(tiles_rect2):
+    global speed
+
+    for i in range(4):
+        tiles_rect2[10+i][0].x += speed[i]
+        # print(type(tiles_rect2[10+i][0].left), tiles_rect2[10+i][0].left)
+        if tiles_rect2[10+i][0].left <= 0 or tiles_rect2[10+i][0].right >= 400:
+            speed[i] *= -1
+
+    return tiles_rect2
 
 
 def threaded_client(conn, data_to_be_sent, player_no):
     conn.send(pickle.dumps(data_to_be_sent[player_no]))  # actually we don't need this,
+    print("data_to_be_sent:", data_to_be_sent)
     # we can just draw all the
     # players on each side
 
@@ -36,8 +66,9 @@ def threaded_client(conn, data_to_be_sent, player_no):
     while True:
 
         try:
+            data_to_be_sent[0] = update_moving_tiles(data_to_be_sent[0])
             data = pickle.loads(conn.recv(2048))
-            print("data in try:", data)
+            # print("data in try:", data)
             data_to_be_sent[player_no] = data
             if not data:
                 conn.send(str.encode("Disconnected"))
@@ -45,22 +76,12 @@ def threaded_client(conn, data_to_be_sent, player_no):
 
             conn.sendall(pickle.dumps(data_to_be_sent))
         except:
-            print("data in except:", data)
+            # print("data in except:", data)
             print("Failed to send")
             break
 
     print("Connection Closed")
     conn.close()
-
-
-cp = 0
-data_to_be_sent = []
-character_list = ["ironman.png", "captainamerica.png", "hulk.png", "thor.png"]
-
-rect_list = []
-for i in range(4):
-    rect = pygame.Rect( 50+60*i, 300, 51, 51)
-    rect_list.append(rect)
 
 player_start_y = 150
 while True:
@@ -71,3 +92,4 @@ while True:
 
     start_new_thread(threaded_client, (conn, data_to_be_sent, cp))
     cp += 1
+
