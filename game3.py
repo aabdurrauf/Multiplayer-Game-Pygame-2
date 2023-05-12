@@ -11,7 +11,8 @@ height = 640
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Player2")
 
-my_data = network.getPlayerData()
+data_to_send = network.getPlayerData()
+player_id = data_to_send[1]
 rect_player = pygame.Rect(0, 0, 51, 51)
 rect_player.centerx = 250
 rect_player.centery = 100
@@ -120,11 +121,12 @@ def check_diamond(diamond_rect):
     return False
 
 
-my_data.append([2, False]) # for diamond pointer
+# 1. for diamond pointer, 2. to check if diamond collected
+data_to_send.append([2, False])
 while True:
     clock.tick(60)
-    data_retrieved = network.send(my_data)
-    my_data[2][1] = False
+    data_retrieved = network.send(data_to_send)
+    data_to_send[3][1] = False
     # print("data retrieved:", data_retrieved)
 
     for event in pygame.event.get():
@@ -136,16 +138,33 @@ while True:
     tiles = data_retrieved[0]
     # this stores the pointer of which diamond to be drawn
     diamond_pos_pointer = data_retrieved[1][0]
+    if diamond_pos_pointer > 11:
+        player_winner = 1
+        max_point = data_retrieved[2][2]
+        for i in range(3, len(data_retrieved)):
+            if max_point < data_retrieved[i][2]:
+                max_point = data_retrieved[i][2]
+                player_winner = i - 1
+        print("Player", player_winner, "won the game")
+
     # diamond position as a rectangle
     diamond_rect = data_retrieved[1][diamond_pos_pointer]
     diamond_image = pygame.image.load("tiles\\diamond.png")
     # diamond_rect = diamond_image.get_rect()
-
+    index = 0
+    for i in range(2, len(data_retrieved)):
+        if player_id == data_retrieved[i][1]:
+            index = i
+    point = data_retrieved[index][2]
+    print("my point", point)
     if check_diamond(diamond_rect):
         print("diamond touched")
-        my_data[2][1] = True
+        data_to_send[3][1] = True
+        point += 10
+        data_to_send[2] = point
+
     # update player position to be sent to the server
-    my_data[0] = update_position(player_vel)
+    data_to_send[0] = update_position(player_vel)
 
     screen.blit(background, (0, 0))
     # draw tiles
@@ -177,7 +196,7 @@ while True:
         rect_other = data_retrieved[i][0]
         image = data_retrieved[i][1]
         # make the user player visible on front
-        if my_data[1] == image:
+        if data_to_send[1] == image:
             rect_front = rect_other
             image_front = image
         # print(image)

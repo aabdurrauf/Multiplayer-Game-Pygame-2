@@ -1,7 +1,4 @@
 import sys
-
-import pygame.font
-
 from tile2 import *
 from network import Network
 
@@ -123,10 +120,6 @@ def check_diamond(diamond_rect):
         return True
     return False
 
-def text_winner(winner):
-    font = pygame.font.Font('PressStart2P-Regular.ttf', 30)
-    text = font.render("Player" + str(winner) + "won the game!", False, 'black')
-    screen.blit(text, (25, 25))
 
 # 1. for diamond pointer, 2. to check if diamond collected
 data_to_send.append([2, False])
@@ -145,20 +138,12 @@ while True:
     tiles = data_retrieved[0]
     # this stores the pointer of which diamond to be drawn
     diamond_pos_pointer = data_retrieved[1][0]
-    if diamond_pos_pointer > 11:
-        player_winner = 1
-        max_point = data_retrieved[2][2]
-        for i in range(3, len(data_retrieved)):
-            if max_point < data_retrieved[i][2]:
-                max_point = data_retrieved[i][2]
-                player_winner = i - 1
-        print("Player", player_winner, "won the game")
-        text_winner(player_winner)
-
     # diamond position as a rectangle
     diamond_rect = data_retrieved[1][diamond_pos_pointer]
     diamond_image = pygame.image.load("tiles\\diamond.png")
     # diamond_rect = diamond_image.get_rect()
+
+    #
     index = 0
     for i in range(2, len(data_retrieved)):
         if player_id == data_retrieved[i][1]:

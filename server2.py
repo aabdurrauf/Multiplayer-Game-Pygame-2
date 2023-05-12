@@ -20,8 +20,8 @@ s.listen(4)
 print("Waiting for a connection")
 
 
-def update_data_to_be_sent(data_to_be_sent, player_data):
-    data_to_be_sent.append(player_data)
+def update_data_to_be_sent(data_to_be_sent, data):
+    data_to_be_sent.append(data)
     # print("update_data_to_be_sent: ", data_to_be_sent)
     return data_to_be_sent
 
@@ -61,11 +61,14 @@ def update_moving_tiles(tiles_rect2):
     return tiles_rect2
 
 
+number_of_diamonds = 10
 diamonds = [2, False]
-for i in range(7):
+for i in range(number_of_diamonds):
     d_x = random.randrange(10, width-50, 10)
     d_y = random.randrange(10, 470, 10)
     diamonds.append(pygame.Rect(d_x, d_y, 24, 24))
+# add last diamond to be unreachable
+diamonds.append(pygame.Rect(1000, 1000, 24, 24))
 
 data_to_be_sent = update_data_to_be_sent(data_to_be_sent, diamonds)
 def threaded_client(conn, data_to_be_sent, player_no):
@@ -77,10 +80,16 @@ def threaded_client(conn, data_to_be_sent, player_no):
         try:
             if player_no == 2:
                 data_to_be_sent[0] = update_moving_tiles(data_to_be_sent[0])
-            data = pickle.loads(conn.recv(2048))
-            data_to_be_sent[player_no] = data[0:2]
-            if data[2][1]:
+            data = pickle.loads(conn.recv(2048*2))
+            data_to_be_sent[player_no] = data
+
+            # point = data_to_be_sent[player_no][2]
+            if data[3][1]:
                 data_to_be_sent[1][0] += 1
+                # data_to_be_sent[player_no][2] += 10
+                # point += 10
+                # data_to_be_sent[player_no][2] = point
+
             # data_to_be_sent[1][0] = data[2]
             print(data[2])
             if not data:
@@ -100,7 +109,8 @@ player_start_y = 150
 while True:
     conn, addr = s.accept()
     print("Connected to: ", addr)
-    data_to_be_sent = update_data_to_be_sent(data_to_be_sent, [rect_list[cp], character_list[cp-2]])
+    data_to_be_sent = update_data_to_be_sent(data_to_be_sent,
+                      [rect_list[cp-2], character_list[cp-2], 0])
 
     start_new_thread(threaded_client, (conn, data_to_be_sent, cp))
     cp += 1
