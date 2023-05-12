@@ -1,21 +1,22 @@
 import sys
-from tile2 import *
+import pygame.font
+from tile import *
 from network import Network
 
 network = Network()
 
-# pygame.init()
+pygame.init()
 clock = pygame.time.Clock()
 width = 400
 height = 640
 screen = pygame.display.set_mode((width, height))
-pygame.display.set_caption("Player2")
+pygame.display.set_caption("Player 4")
 
 data_to_send = network.getPlayerData()
 player_id = data_to_send[1]
 rect_player = pygame.Rect(0, 0, 51, 51)
-rect_player.centerx = 250
-rect_player.centery = 100
+rect_player.centerx = 50
+rect_player.centery = 580
 
 # movement units
 player_vel = 6
@@ -102,6 +103,7 @@ def update_position(player_vel):
     vertical_collision()
     return rect_player
 
+
 def player_control():
     # player control and border control
     userInput = pygame.key.get_pressed()
@@ -114,11 +116,20 @@ def player_control():
     if userInput[pygame.K_UP] and rect_player.y > 0 and position[0]:
         jump()
 
+
 # check if the player touches the diamond
 def check_diamond(diamond_rect):
     if rect_player.colliderect(diamond_rect):
         return True
     return False
+
+
+def text_winner(winner):
+    font = pygame.font.Font('fonts/PressStart2P-Regular.ttf', 16)
+    text = font.render("Player " + str(winner) + " won the game!", True, 'black')
+    shadow = font.render("Player " + str(winner) + " won the game!", True, 'white')
+    screen.blit(shadow, (27, 47))
+    screen.blit(text, (25, 45))
 
 
 # 1. for diamond pointer, 2. to check if diamond collected
@@ -141,17 +152,14 @@ while True:
     # diamond position as a rectangle
     diamond_rect = data_retrieved[1][diamond_pos_pointer]
     diamond_image = pygame.image.load("tiles\\diamond.png")
-    # diamond_rect = diamond_image.get_rect()
-
-    #
     index = 0
     for i in range(2, len(data_retrieved)):
         if player_id == data_retrieved[i][1]:
             index = i
     point = data_retrieved[index][2]
-    print("my point", point)
+    # print("my point", point)
     if check_diamond(diamond_rect):
-        print("diamond touched")
+        print("diamond collected")
         data_to_send[3][1] = True
         point += 10
         data_to_send[2] = point
@@ -207,4 +215,15 @@ while True:
     screen.blit(player_image, rect)
 
     screen.blit(diamond_image, diamond_rect)
+
+    # print the winner text
+    if diamond_pos_pointer > 21:
+        player_winner = 1
+        max_point = data_retrieved[2][2]
+        for i in range(3, len(data_retrieved)):
+            if max_point < data_retrieved[i][2]:
+                max_point = data_retrieved[i][2]
+                player_winner = i - 1
+        # print("Player", player_winner, "won the game")
+        text_winner(player_winner)
     pygame.display.flip()
