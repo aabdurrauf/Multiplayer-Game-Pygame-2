@@ -20,7 +20,7 @@ class TileMaker:
 
         # make moving tiles
         for level in range(4):
-            tiles_num = random.randint(2, 3)
+            tiles_num = random.randint(1, 3)
             starting_point = random.randrange(0, width - tiles_num * 40, 7)
             new_tile = Tile(starting_point, 475 - 115 * level, tiles_num)
             self.tiles.append([new_tile.rect, new_tile.ground_tile])

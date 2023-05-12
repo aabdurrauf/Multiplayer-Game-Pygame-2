@@ -8,7 +8,7 @@ network = Network()
 # pygame.init()
 clock = pygame.time.Clock()
 width = 400
-height = 650
+height = 640
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Player2")
 

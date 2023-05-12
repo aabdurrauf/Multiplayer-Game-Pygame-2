@@ -1,3 +1,4 @@
+import random
 import socket
 from _thread import *
 import pickle
@@ -28,21 +29,28 @@ def update_data_to_be_sent(data_to_be_sent, player_data):
 # make moving tiles
 width = 400
 height = 650
-cp = 1
+cp = 2
 tile_maker = TileMaker()
 tiles_rect = tile_maker.getTiles(width, height)
 
 data_to_be_sent = []
 data_to_be_sent = update_data_to_be_sent(data_to_be_sent, tiles_rect)
 
-character_list = ["ironman.png", "captainamerica.png", "hulk.png", "thor.png"]
+character_list = ["captainamerica.png", "wandavision.png", "hulk.png", "thor.png"]
 
 # rectangle list for players
 rect_list = []
 for i in range(4):
     rect = pygame.Rect(50 + 60 * i, 300, 51, 51)
     rect_list.append(rect)
+
 speed = [1, -2, 3, -1]
+# randomly set the velocity of tiles
+for i in range(4):
+    num = 0
+    while num == 0:
+        num = random.randint(-2, 3)
+    speed[i] = num
 
 def update_moving_tiles(tiles_rect2):
     for i in range(4):
@@ -53,6 +61,13 @@ def update_moving_tiles(tiles_rect2):
     return tiles_rect2
 
 
+diamonds = [2, False]
+for i in range(7):
+    d_x = random.randrange(10, width-50, 10)
+    d_y = random.randrange(10, 470, 10)
+    diamonds.append(pygame.Rect(d_x, d_y, 24, 24))
+
+data_to_be_sent = update_data_to_be_sent(data_to_be_sent, diamonds)
 def threaded_client(conn, data_to_be_sent, player_no):
     conn.send(pickle.dumps(data_to_be_sent[player_no]))
     print("data_to_be_sent:", data_to_be_sent)
@@ -60,10 +75,14 @@ def threaded_client(conn, data_to_be_sent, player_no):
     reply = ''
     while True:
         try:
-            if player_no == 1:
+            if player_no == 2:
                 data_to_be_sent[0] = update_moving_tiles(data_to_be_sent[0])
             data = pickle.loads(conn.recv(2048))
-            data_to_be_sent[player_no] = data
+            data_to_be_sent[player_no] = data[0:2]
+            if data[2][1]:
+                data_to_be_sent[1][0] += 1
+            # data_to_be_sent[1][0] = data[2]
+            print(data[2])
             if not data:
                 conn.send(str.encode("Disconnected"))
                 break
@@ -81,7 +100,7 @@ player_start_y = 150
 while True:
     conn, addr = s.accept()
     print("Connected to: ", addr)
-    data_to_be_sent = update_data_to_be_sent(data_to_be_sent, [rect_list[cp], character_list[cp]])
+    data_to_be_sent = update_data_to_be_sent(data_to_be_sent, [rect_list[cp], character_list[cp-2]])
 
     start_new_thread(threaded_client, (conn, data_to_be_sent, cp))
     cp += 1
