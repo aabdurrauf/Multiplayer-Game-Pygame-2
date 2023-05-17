@@ -11,7 +11,6 @@ port = 5555
 
 try:
     s.bind((server, port))
-
 except socket.error as e:
     print(str(e))
 
@@ -80,7 +79,7 @@ def threaded_client(conn, data_to_be_sent, player_no):
         try:
             if player_no == 2:
                 data_to_be_sent[0] = update_moving_tiles(data_to_be_sent[0])
-            data = pickle.loads(conn.recv(2048*2))
+            data = pickle.loads(conn.recv(2048))
             data_to_be_sent[player_no] = data
 
             # point = data_to_be_sent[player_no][2]
